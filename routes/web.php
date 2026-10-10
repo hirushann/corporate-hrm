@@ -1,18 +1,21 @@
 <?php
 
+use App\Http\Controllers\CompanyDocumentController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\PayslipController;
 use App\Livewire\Admin;
 use App\Livewire\Attendance;
+use App\Livewire\Dashboard;
 use App\Livewire\Employees;
 use App\Livewire\Leave;
 use App\Livewire\Organization;
 use App\Livewire\Payroll;
+use App\Livewire\Portal;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', Dashboard::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -62,6 +65,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
     Route::get('payslips/{payslip}/pdf', [PayslipController::class, 'pdf'])->name('payslips.pdf');
+
+    // Employee self-service ("My ..."): always scoped to the signed-in user's own employee record.
+    Route::prefix('my')->group(function () {
+        Route::get('profile', Portal\Profile::class)->middleware('permission:portal.use')->name('portal.profile');
+        Route::get('payslips', Portal\Payslips::class)->middleware('permission:portal.use')->name('portal.payslips');
+        Route::get('attendance', Portal\Attendance::class)->middleware('permission:portal.use')->name('portal.attendance');
+        Route::get('leave', Portal\Leave::class)->middleware('permission:portal.use')->name('portal.leave');
+    });
+    Route::get('notices', Portal\Notices::class)->middleware('permission:notices.view')->name('portal.notices');
+    Route::get('documents', Portal\Documents::class)->middleware('permission:documents.view')->name('portal.documents');
+    Route::get('documents/{document}/download', CompanyDocumentController::class)->name('documents.download');
+
+    Route::get('admin/notices', Admin\Notices::class)->middleware('permission:notices.manage')->name('admin.notices');
+    Route::get('admin/documents', Admin\CompanyDocuments::class)->middleware('permission:documents.manage')->name('admin.documents');
 
     Route::get('admin/users', Admin\Users::class)->middleware('permission:users.view')->name('admin.users');
     Route::get('admin/audit-log', Admin\AuditLog::class)->middleware('permission:audit.view')->name('admin.audit');

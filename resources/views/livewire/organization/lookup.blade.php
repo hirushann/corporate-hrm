@@ -13,6 +13,7 @@
             <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500">
                 <tr>
                     @foreach ($fields as $key => $field)
+                        @continue($field['hidden'] ?? false)
                         <th class="px-4 py-3">{{ $field['label'] }}</th>
                     @endforeach
                     @if ($canManage)<th class="px-4 py-3"></th>@endif
@@ -22,6 +23,7 @@
                 @forelse ($rows as $row)
                     <tr wire:key="row-{{ $row->id }}">
                         @foreach ($fields as $key => $field)
+                            @continue($field['hidden'] ?? false)
                             <td class="px-4 py-3">
                                 @if (($field['type'] ?? 'text') === 'weekdays')
                                     {{ collect((array) $row->{$key})->map(fn ($d) => ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(int) $d])->implode(', ') }}
@@ -74,6 +76,10 @@
                             <select wire:model="form.{{ $key }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm">
                                 @foreach ($field['options'] as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
                             </select>
+                        </x-field>
+                    @elseif (($field['type'] ?? 'text') === 'textarea')
+                        <x-field :label="$field['label']" :error="'form.'.$key">
+                            <textarea wire:model="form.{{ $key }}" rows="5" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm"></textarea>
                         </x-field>
                     @else
                         <x-field :label="$field['label']" :error="'form.'.$key">

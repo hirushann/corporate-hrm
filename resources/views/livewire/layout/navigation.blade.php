@@ -98,7 +98,24 @@ new class extends Component
                             </x-dropdown>
                         </div>
                     @endcan
-                    @canany(['users.view', 'audit.view'])
+                    @can('portal.use')
+                        <div class="hidden sm:flex sm:items-center">
+                            <x-dropdown align="left" width="48">
+                                <x-slot name="trigger">
+                                    <button class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none">{{ __('My Portal') }} <span class="ms-1">▾</span></button>
+                                </x-slot>
+                                <x-slot name="content">
+                                    <x-dropdown-link :href="route('portal.profile')" wire:navigate>{{ __('My profile') }}</x-dropdown-link>
+                                    <x-dropdown-link :href="route('portal.payslips')" wire:navigate>{{ __('My payslips') }}</x-dropdown-link>
+                                    <x-dropdown-link :href="route('portal.attendance')" wire:navigate>{{ __('My attendance') }}</x-dropdown-link>
+                                    <x-dropdown-link :href="route('portal.leave')" wire:navigate>{{ __('My leave') }}</x-dropdown-link>
+                                    @can('notices.view')<x-dropdown-link :href="route('portal.notices')" wire:navigate>{{ __('Notices') }}</x-dropdown-link>@endcan
+                                    @can('documents.view')<x-dropdown-link :href="route('portal.documents')" wire:navigate>{{ __('Company documents') }}</x-dropdown-link>@endcan
+                                </x-slot>
+                            </x-dropdown>
+                        </div>
+                    @endcan
+                    @canany(['users.view', 'audit.view', 'notices.manage', 'documents.manage'])
                         <div class="hidden sm:flex sm:items-center">
                             <x-dropdown align="left" width="48">
                                 <x-slot name="trigger">
@@ -106,6 +123,8 @@ new class extends Component
                                 </x-slot>
                                 <x-slot name="content">
                                     @can('users.view')<x-dropdown-link :href="route('admin.users')" wire:navigate>{{ __('Users') }}</x-dropdown-link>@endcan
+                                    @can('notices.manage')<x-dropdown-link :href="route('admin.notices')" wire:navigate>{{ __('Manage notices') }}</x-dropdown-link>@endcan
+                                    @can('documents.manage')<x-dropdown-link :href="route('admin.documents')" wire:navigate>{{ __('Manage documents') }}</x-dropdown-link>@endcan
                                     @can('audit.view')<x-dropdown-link :href="route('admin.audit')" wire:navigate>{{ __('Audit log') }}</x-dropdown-link>@endcan
                                 </x-slot>
                             </x-dropdown>
@@ -187,6 +206,16 @@ new class extends Component
                 <x-responsive-nav-link :href="route('payroll.components')" wire:navigate>{{ __('Salary components') }}</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('payroll.settings')" wire:navigate>{{ __('Payroll settings') }}</x-responsive-nav-link>
             @endcan
+            @can('portal.use')
+                <x-responsive-nav-link :href="route('portal.profile')" wire:navigate>{{ __('My profile') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('portal.payslips')" wire:navigate>{{ __('My payslips') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('portal.attendance')" wire:navigate>{{ __('My attendance') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('portal.leave')" wire:navigate>{{ __('My leave') }}</x-responsive-nav-link>
+            @endcan
+            @can('notices.view')<x-responsive-nav-link :href="route('portal.notices')" wire:navigate>{{ __('Notices') }}</x-responsive-nav-link>@endcan
+            @can('documents.view')<x-responsive-nav-link :href="route('portal.documents')" wire:navigate>{{ __('Company documents') }}</x-responsive-nav-link>@endcan
+            @can('notices.manage')<x-responsive-nav-link :href="route('admin.notices')" wire:navigate>{{ __('Manage notices') }}</x-responsive-nav-link>@endcan
+            @can('documents.manage')<x-responsive-nav-link :href="route('admin.documents')" wire:navigate>{{ __('Manage documents') }}</x-responsive-nav-link>@endcan
             @can('users.view')<x-responsive-nav-link :href="route('admin.users')" wire:navigate>{{ __('Users') }}</x-responsive-nav-link>@endcan
             @can('audit.view')<x-responsive-nav-link :href="route('admin.audit')" wire:navigate>{{ __('Audit log') }}</x-responsive-nav-link>@endcan
         </div>

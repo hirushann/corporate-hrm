@@ -60,6 +60,11 @@ abstract class LookupCrud extends Component
         return 'name';
     }
 
+    protected function orderDirection(): string
+    {
+        return 'asc';
+    }
+
     protected function searchColumn(): string
     {
         return 'name';
@@ -155,7 +160,7 @@ abstract class LookupCrud extends Component
 
     public function render()
     {
-        $query = ($this->model())::query()->orderBy($this->orderColumn());
+        $query = ($this->model())::query()->orderBy($this->orderColumn(), $this->orderDirection());
         if (filled($this->search)) {
             $query->where($this->searchColumn(), 'like', "%{$this->search}%");
         }

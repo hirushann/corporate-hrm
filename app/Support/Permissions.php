@@ -30,6 +30,8 @@ final class Permissions
             'payroll' => ['view', 'process', 'approve', 'lock', 'settings'],
             'reports' => ['attendance', 'payroll', 'statutory', 'headcount', 'export'],
             'notices' => ['view', 'manage'],
+            'documents' => ['view', 'manage'],
+            'portal' => ['use'],
             'users' => ['view', 'manage'],
             'roles' => ['manage'],
             'audit' => ['view'],
@@ -64,6 +66,8 @@ final class Permissions
                 'payroll.view', 'payroll.approve',
                 'reports.attendance', 'reports.payroll', 'reports.statutory', 'reports.headcount', 'reports.export',
                 'notices.view', 'notices.manage',
+                'documents.view', 'documents.manage',
+                'portal.use',
                 'users.view', 'users.manage',
             ],
             self::PAYROLL_OFFICER => [
@@ -73,17 +77,17 @@ final class Permissions
                 'leave.view',
                 'payroll.view', 'payroll.process',
                 'reports.attendance', 'reports.payroll', 'reports.statutory', 'reports.export',
-                'notices.view',
+                'notices.view', 'documents.view', 'portal.use',
             ],
             self::MANAGER => [
                 'employees.view',
                 'attendance.view', 'attendance.adjust',
                 'leave.view', 'leave.approve',
                 'reports.attendance', 'reports.headcount',
-                'notices.view',
+                'notices.view', 'documents.view', 'portal.use',
             ],
             self::EMPLOYEE => [
-                'notices.view',
+                'notices.view', 'documents.view', 'portal.use',
             ],
         ];
     }
