@@ -13,15 +13,15 @@
         'Statutory' => ['EPF number' => $employee->epf_number, 'ETF number' => $employee->etf_number],
     ];
 @endphp
-<div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+<div class="max-w-3xl">
     <x-page-header title="My profile" />
-    <p class="mb-4 text-sm text-gray-500">To change any of these details, please contact HR.</p>
+    <p class="mb-4 text-sm text-zinc-500">To change any of these details, please contact HR.</p>
     <div class="space-y-6">
         @foreach ($sections as $heading => $items)
-            <section class="rounded-lg bg-white p-6 shadow-sm">
-                <h2 class="mb-3 font-medium text-gray-900">{{ $heading }}</h2>
+            <section class="border border-zinc-200 rounded-xl bg-white p-6">
+                <h2 class="mb-3 font-medium text-zinc-900">{{ $heading }}</h2>
                 <dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                    @foreach ($items as $label => $value)<div><dt class="text-gray-500">{{ $label }}</dt><dd class="text-gray-900">{{ filled($value) ? $value : '—' }}</dd></div>@endforeach
+                    @foreach ($items as $label => $value)<div><dt class="text-zinc-500">{{ $label }}</dt><dd class="text-zinc-900">{{ filled($value) ? $value : '—' }}</dd></div>@endforeach
                 </dl>
             </section>
         @endforeach

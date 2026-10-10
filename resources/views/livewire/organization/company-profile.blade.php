@@ -1,8 +1,8 @@
-<div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+<div class="max-w-3xl">
     <x-page-header title="Company profile" />
     <x-flash />
 
-    <form wire:submit="save" class="grid gap-4 rounded-lg bg-white p-6 shadow-sm sm:grid-cols-2">
+    <form wire:submit="save" class="border border-zinc-200 grid gap-4 rounded-xl bg-white p-6 sm:grid-cols-2">
         <x-field label="Company name" error="name" class="sm:col-span-2">
             <x-text-input wire:model="name" class="mt-1 block w-full" :disabled="! $canManage" />
         </x-field>

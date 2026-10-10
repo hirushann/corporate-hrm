@@ -1,35 +1,74 @@
-<div class="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+@php
+    $icons = ['headcount' => 'users', 'present' => 'check-circle', 'absent' => 'x-circle', 'leave' => 'calendar-days', 'leave_pending' => 'inbox', 'adjust_pending' => 'clock', 'payroll_pending' => 'banknotes'];
+    $tones = ['present' => 'text-green-600 bg-green-50', 'absent' => 'text-red-600 bg-red-50', 'leave' => 'text-blue-600 bg-blue-50', 'leave_pending' => 'text-amber-600 bg-amber-50', 'adjust_pending' => 'text-amber-600 bg-amber-50', 'payroll_pending' => 'text-amber-600 bg-amber-50'];
+@endphp
+<div class="max-w-6xl space-y-8">
     <div>
-        <h1 class="text-2xl font-semibold text-gray-800">{{ __('Welcome, :name', ['name' => auth()->user()->name]) }}</h1>
-        @if ($employee)<p class="text-sm text-gray-500">{{ $employee->designation->name }} · {{ $employee->department->name }} · {{ $employee->employee_no }}</p>@endif
+        <flux:heading size="xl" level="1">{{ __('Welcome back, :name', ['name' => auth()->user()->name]) }}</flux:heading>
+        <flux:text class="mt-1">
+            @if ($employee){{ $employee->designation->name }} · {{ $employee->department->name }} · {{ $employee->employee_no }}@else{{ now()->format('l, j F Y') }}@endif
+        </flux:text>
     </div>
 
+    @if ($stats)
+        <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            @foreach ($stats as $key => $stat)
+                <a @if ($stat['route']) href="{{ $stat['route'] }}" wire:navigate @endif class="group rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-indigo-300 hover:shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <flux:text size="sm">{{ $stat['label'] }}</flux:text>
+                        <span class="flex size-8 items-center justify-center rounded-lg {{ $tones[$key] ?? 'text-indigo-600 bg-indigo-50' }}"><flux:icon :name="$icons[$key] ?? 'chart-bar'" variant="mini" class="size-4" /></span>
+                    </div>
+                    <div class="mt-3 text-3xl font-semibold tracking-tight text-zinc-900">{{ $stat['value'] }}</div>
+                </a>
+            @endforeach
+        </div>
+    @endif
+
     @if ($employee)
-        <div class="grid gap-4 sm:grid-cols-3">
-            <a href="{{ route('portal.payslips') }}" wire:navigate class="rounded-lg bg-white p-4 shadow-sm hover:bg-gray-50">
-                <div class="text-xs uppercase text-gray-500">Latest payslip</div>
-                @if ($latestPayslip)
-                    <div class="mt-1 text-lg font-semibold">{{ $latestPayslip->run->label() }}</div>
-                    <div class="text-sm text-gray-500">Net {{ number_format($latestPayslip->net_salary, 2) }}</div>
-                @else
-                    <div class="mt-1 text-sm text-gray-500">None published yet</div>
-                @endif
-            </a>
-            <a href="{{ route('portal.leave') }}" wire:navigate class="rounded-lg bg-white p-4 shadow-sm hover:bg-gray-50"><div class="text-xs uppercase text-gray-500">Leave</div><div class="mt-1 text-sm text-gray-700">Check balances or request leave</div></a>
-            <a href="{{ route('portal.attendance') }}" wire:navigate class="rounded-lg bg-white p-4 shadow-sm hover:bg-gray-50"><div class="text-xs uppercase text-gray-500">Attendance</div><div class="mt-1 text-sm text-gray-700">See this month's summary</div></a>
+        <div>
+            <flux:heading size="lg" class="mb-3">{{ __('My workspace') }}</flux:heading>
+            <div class="grid gap-4 sm:grid-cols-3">
+                <a href="{{ route('portal.payslips') }}" wire:navigate class="rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-indigo-300 hover:shadow-sm">
+                    <div class="flex items-center gap-2 text-zinc-500"><flux:icon name="banknotes" variant="mini" class="size-4" /><flux:text size="sm">{{ __('Latest payslip') }}</flux:text></div>
+                    @if ($latestPayslip)
+                        <div class="mt-2 text-lg font-semibold text-zinc-900">{{ $latestPayslip->run->label() }}</div>
+                        <flux:text size="sm">{{ __('Net pay') }} {{ number_format($latestPayslip->net_salary, 2) }}</flux:text>
+                    @else
+                        <flux:text size="sm" class="mt-2">{{ __('None published yet') }}</flux:text>
+                    @endif
+                </a>
+                <a href="{{ route('portal.leave') }}" wire:navigate class="rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-indigo-300 hover:shadow-sm">
+                    <div class="flex items-center gap-2 text-zinc-500"><flux:icon name="calendar-days" variant="mini" class="size-4" /><flux:text size="sm">{{ __('Leave') }}</flux:text></div>
+                    <flux:text class="mt-2">{{ __('Check balances or request leave') }}</flux:text>
+                </a>
+                <a href="{{ route('portal.attendance') }}" wire:navigate class="rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-indigo-300 hover:shadow-sm">
+                    <div class="flex items-center gap-2 text-zinc-500"><flux:icon name="clock" variant="mini" class="size-4" /><flux:text size="sm">{{ __('Attendance') }}</flux:text></div>
+                    <flux:text class="mt-2">{{ __("See this month's summary") }}</flux:text>
+                </a>
+            </div>
         </div>
     @elseif (auth()->user()->can('portal.use'))
-        <p class="rounded-md bg-amber-50 p-3 text-sm text-amber-800">No employee profile is linked to your account, so the self-service pages are not available.</p>
+        <flux:callout variant="warning" icon="exclamation-triangle" :heading="__('No employee profile is linked to your account')" :text="__('The self-service pages are available once HR links your login to an employee record.')" />
     @endif
 
     @if ($notices->isNotEmpty())
-        <section class="rounded-lg bg-white p-6 shadow-sm">
-            <div class="mb-3 flex items-center justify-between"><h2 class="font-medium text-gray-900">Notices</h2><a href="{{ route('portal.notices') }}" wire:navigate class="text-sm text-indigo-600 hover:underline">View all</a></div>
-            <ul class="space-y-3 text-sm">
+        <div class="rounded-xl border border-zinc-200 bg-white p-6">
+            <div class="mb-4 flex items-center justify-between">
+                <flux:heading size="lg">{{ __('Notices') }}</flux:heading>
+                <flux:button size="sm" variant="ghost" :href="route('portal.notices')" wire:navigate>{{ __('View all') }}</flux:button>
+            </div>
+            <ul class="divide-y divide-zinc-100">
                 @foreach ($notices as $n)
-                    <li><span class="font-medium">{{ $n->is_pinned ? '📌 ' : '' }}{{ $n->title }}</span> <span class="text-xs text-gray-400">{{ $n->published_at->format('Y-m-d') }}</span><p class="text-gray-600">{{ \Illuminate\Support\Str::limit($n->body, 140) }}</p></li>
+                    <li class="py-3 first:pt-0 last:pb-0">
+                        <div class="flex items-center gap-2">
+                            @if ($n->is_pinned)<flux:badge size="sm" color="amber">{{ __('Pinned') }}</flux:badge>@endif
+                            <span class="font-medium text-zinc-900">{{ $n->title }}</span>
+                            <span class="text-xs text-zinc-400">{{ $n->published_at->format('Y-m-d') }}</span>
+                        </div>
+                        <flux:text size="sm" class="mt-1">{{ \Illuminate\Support\Str::limit($n->body, 160) }}</flux:text>
+                    </li>
                 @endforeach
             </ul>
-        </section>
+        </div>
     @endif
 </div>

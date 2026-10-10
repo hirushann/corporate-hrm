@@ -1,10 +1,10 @@
-<div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+<div class="max-w-3xl">
     <x-page-header title="Import punches">
-        <a href="{{ route('attendance.index') }}" wire:navigate class="text-sm text-gray-600 hover:underline">Back to attendance</a>
+        <a href="{{ route('attendance.index') }}" wire:navigate class="text-sm text-zinc-600 hover:underline">Back to attendance</a>
     </x-page-header>
 
-    <form wire:submit="import" class="space-y-4 rounded-lg bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-600">
+    <form wire:submit="import" class="border border-zinc-200 space-y-4 rounded-xl bg-white p-6">
+        <p class="text-sm text-zinc-600">
             Upload a CSV exported from the biometric device. The first row must be a header with an employee ID column
             (<code>employee_no</code>, <code>biometric_id</code>, <code>user_id</code>, <code>id</code> or <code>no</code>) and either one
             <code>datetime</code> column or separate <code>date</code> and <code>time</code> columns. Repeated punches are ignored, and attendance is recalculated for the affected dates.
@@ -14,7 +14,7 @@
     </form>
 
     @if ($result)
-        <div class="mt-6 rounded-lg bg-white p-6 text-sm shadow-sm">
+        <div class="border border-zinc-200 mt-6 rounded-xl bg-white p-6 text-sm">
             <p><strong>{{ $result['imported'] }}</strong> punches imported, <strong>{{ $result['duplicates'] }}</strong> duplicates skipped, <strong>{{ $result['processed'] }}</strong> daily records recalculated.</p>
             @if ($result['error_count'])
                 <p class="mt-3 font-medium text-red-700">{{ $result['error_count'] }} rows had problems:</p>

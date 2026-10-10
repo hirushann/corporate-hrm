@@ -3,6 +3,7 @@
 use App\Http\Controllers\CompanyDocumentController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\PayslipController;
+use App\Http\Controllers\ReportExportController;
 use App\Livewire\Admin;
 use App\Livewire\Attendance;
 use App\Livewire\Dashboard;
@@ -11,6 +12,7 @@ use App\Livewire\Leave;
 use App\Livewire\Organization;
 use App\Livewire\Payroll;
 use App\Livewire\Portal;
+use App\Livewire\Reports;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -79,6 +81,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('admin/notices', Admin\Notices::class)->middleware('permission:notices.manage')->name('admin.notices');
     Route::get('admin/documents', Admin\CompanyDocuments::class)->middleware('permission:documents.manage')->name('admin.documents');
+
+    Route::get('reports', Reports\Index::class)->name('reports.index');
+    Route::get('reports/{key}', Reports\Show::class)->name('reports.show');
+    Route::get('reports/{key}/export/{format}', ReportExportController::class)->name('reports.export');
 
     Route::get('admin/users', Admin\Users::class)->middleware('permission:users.view')->name('admin.users');
     Route::get('admin/audit-log', Admin\AuditLog::class)->middleware('permission:audit.view')->name('admin.audit');
