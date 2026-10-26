@@ -12,6 +12,7 @@
         <link rel="icon" type="image/png" href="{{ asset('images/logo-mark.png') }}">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @fluxAppearance
     </head>
     <body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
         <div class="flex min-h-screen flex-col items-center justify-center px-4 py-10">

@@ -28,7 +28,7 @@
                                 @if (($field['type'] ?? 'text') === 'weekdays')
                                     {{ collect((array) $row->{$key})->map(fn ($d) => ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(int) $d])->implode(', ') }}
                                 @elseif (($field['type'] ?? 'text') === 'select')
-                                    {{ $field['options'][$row->{$key}] ?? $row->{$key} }}
+                                    {{ $row->{$key} !== null ? ($field['options'][$row->{$key}] ?? $row->{$key}) : '' }}
                                 @elseif (($field['type'] ?? 'text') === 'time')
                                     {{ substr((string) $row->{$key}, 0, 5) }}
                                 @elseif (($field['type'] ?? 'text') === 'date')

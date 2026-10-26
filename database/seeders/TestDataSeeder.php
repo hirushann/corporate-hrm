@@ -240,22 +240,26 @@ class TestDataSeeder extends Seeder
         $emp2User->syncRoles(Permissions::EMPLOYEE);
 
         // Seed Employees
+        // Clear any mismatched user links before assignment
+        Employee::where('user_id', $superAdmin->id)->where('employee_no', '!=', 'EMP-0001')->update(['user_id' => null]);
+        Employee::where('user_id', $testUser->id)->where('employee_no', '!=', 'EMP-0008')->update(['user_id' => null]);
+
         // CEO
         $empCeo = Employee::firstOrCreate(
             ['employee_no' => 'EMP-0001'],
             [
-                'user_id' => $testUser->id,
+                'user_id' => $superAdmin->id,
                 'branch_id' => $branchHo->id,
                 'department_id' => $deptExec->id,
                 'designation_id' => $desigCeo->id,
                 'employee_category_id' => $permCat->id,
-                'full_name' => 'Test User (CEO)',
+                'full_name' => 'Super Admin (CEO)',
                 'nic' => '198212345678',
                 'date_of_birth' => '1982-05-14',
                 'gender' => 'male',
                 'marital_status' => 'married',
                 'phone' => '+94 77 100 2000',
-                'personal_email' => 'test@example.com',
+                'personal_email' => 'admin@example.com',
                 'address' => '45 Flower Road, Colombo 07',
                 'emergency_contact_name' => 'Anoma Perera',
                 'emergency_contact_phone' => '+94 77 100 2001',
@@ -265,7 +269,7 @@ class TestDataSeeder extends Seeder
                 'bank_name' => 'Commercial Bank',
                 'bank_branch' => 'Kollupitiya',
                 'bank_account_number' => '1000293847',
-                'bank_account_name' => 'Test User',
+                'bank_account_name' => 'Super Admin',
                 'epf_number' => 'EPF-001',
                 'etf_number' => 'ETF-001',
                 'tax_tin' => 'TIN-001234',
@@ -275,6 +279,15 @@ class TestDataSeeder extends Seeder
                 'ot_eligible' => false,
             ]
         );
+
+        if ($empCeo->user_id !== $superAdmin->id) {
+            $empCeo->update([
+                'user_id' => $superAdmin->id,
+                'full_name' => 'Super Admin (CEO)',
+                'personal_email' => 'admin@example.com',
+                'bank_account_name' => 'Super Admin',
+            ]);
+        }
 
         // Engineering Lead (Manager)
         $empMgr = Employee::firstOrCreate(
@@ -501,6 +514,7 @@ class TestDataSeeder extends Seeder
         $empMkt = Employee::firstOrCreate(
             ['employee_no' => 'EMP-0008'],
             [
+                'user_id' => $testUser->id,
                 'branch_id' => $branchHo->id,
                 'department_id' => $deptMkt->id,
                 'designation_id' => $desigMkt->id,
