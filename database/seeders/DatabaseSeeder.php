@@ -11,7 +11,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([RolesAndPermissionsSeeder::class, OrganizationSeeder::class, AttendanceSeeder::class, PayrollSeeder::class]);
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+            OrganizationSeeder::class,
+            AttendanceSeeder::class,
+            PayrollSeeder::class,
+            TestDataSeeder::class,
+        ]);
 
         $password = env('ADMIN_PASSWORD') ?: Str::password(16);
 
