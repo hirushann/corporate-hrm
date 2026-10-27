@@ -161,6 +161,7 @@ class Employee extends Model
     {
         // Bank account number and TIN are deliberately not logged.
         return LogOptions::defaults()
+            ->logAll()
             ->logExcept(['bank_account_number', 'tax_tin', 'updated_at'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();

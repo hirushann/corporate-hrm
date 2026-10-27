@@ -10,6 +10,7 @@ use App\Models\Employee;
 use App\Models\EmployeeCategory;
 use App\Models\User;
 use App\Support\Permissions;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -68,6 +69,17 @@ class Form extends Component
             $this->f['apit_applicable'] = false;
             $this->f['ot_eligible'] = true;
         }
+    }
+
+    /** @return array<string, string> */
+    protected function validationAttributes(): array
+    {
+        $attributes = [];
+        foreach (self::FIELDS as $field) {
+            $attributes['f.'.$field] = str_replace('_', ' ', preg_replace('/_id$/', '', $field));
+        }
+
+        return $attributes;
     }
 
     protected function rules(): array
@@ -147,7 +159,7 @@ class Form extends Component
 
         $this->validate();
 
-        $data = collect($this->f)->map(fn ($v) => $v === '' ? null : $v)->all();
+        $data = collect(Arr::only($this->f, self::FIELDS))->map(fn ($v) => $v === '' ? null : $v)->all();
         // Required columns must keep real values; booleans must not become null.
         foreach (['epf_applicable', 'etf_applicable', 'apit_applicable', 'ot_eligible'] as $flag) {
             $data[$flag] = (bool) $data[$flag];

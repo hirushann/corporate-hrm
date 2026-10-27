@@ -1,0 +1,167 @@
+diff --git a/app/Http/Controllers/EmployeeDocumentController.php b/app/Http/Controllers/EmployeeDocumentController.php
+index 2d77d0e..e8e3f4a 100644
+--- a/app/Http/Controllers/EmployeeDocumentController.php
++++ b/app/Http/Controllers/EmployeeDocumentController.php
+@@ -2,6 +2,7 @@
+ 
+ namespace App\Http\Controllers;
+ 
++use App\Models\Employee;
+ use App\Models\EmployeeDocument;
+ use Illuminate\Support\Facades\Storage;
+ use Symfony\Component\HttpFoundation\StreamedResponse;
+@@ -11,6 +12,7 @@ class EmployeeDocumentController extends Controller
+     public function __invoke(EmployeeDocument $document): StreamedResponse
+     {
+         abort_unless(auth()->user()->can('employees.view'), 403);
++        abort_unless(Employee::visibleTo(auth()->user())->whereKey($document->employee_id)->exists(), 403);
+         abort_unless(Storage::disk('local')->exists($document->path), 404);
+ 
+         activity()->performedOn($document)->causedBy(auth()->user())->log('downloaded');
+diff --git a/app/Livewire/Employees/Form.php b/app/Livewire/Employees/Form.php
+index 9c42f48..5eca995 100644
+--- a/app/Livewire/Employees/Form.php
++++ b/app/Livewire/Employees/Form.php
+@@ -10,6 +10,7 @@
+ use App\Models\EmployeeCategory;
+ use App\Models\User;
+ use App\Support\Permissions;
++use Illuminate\Support\Arr;
+ use Illuminate\Support\Facades\DB;
+ use Illuminate\Support\Facades\Password;
+ use Illuminate\Support\Str;
+@@ -70,6 +71,17 @@ public function mount(?Employee $employee = null): void
+         }
+     }
+ 
++    /** @return array<string, string> */
++    protected function validationAttributes(): array
++    {
++        $attributes = [];
++        foreach (self::FIELDS as $field) {
++            $attributes['f.'.$field] = str_replace('_', ' ', preg_replace('/_id$/', '', $field));
++        }
++
++        return $attributes;
++    }
++
+     protected function rules(): array
+     {
+         $id = $this->employee?->id;
+@@ -147,7 +159,7 @@ public function save()
+ 
+         $this->validate();
+ 
+-        $data = collect($this->f)->map(fn ($v) => $v === '' ? null : $v)->all();
++        $data = collect(Arr::only($this->f, self::FIELDS))->map(fn ($v) => $v === '' ? null : $v)->all();
+         // Required columns must keep real values; booleans must not become null.
+         foreach (['epf_applicable', 'etf_applicable', 'apit_applicable', 'ot_eligible'] as $flag) {
+             $data[$flag] = (bool) $data[$flag];
+diff --git a/app/Livewire/Leave/Balances.php b/app/Livewire/Leave/Balances.php
+index 1de95ed..1064d22 100644
+--- a/app/Livewire/Leave/Balances.php
++++ b/app/Livewire/Leave/Balances.php
+@@ -18,7 +18,7 @@ class Balances extends Component
+ {
+     use AuthorizesPermission, WithPagination;
+ 
+-    public int $year;
++    public ?int $year = null;
+ 
+     public string $search = '';
+ 
+@@ -38,26 +38,32 @@ public function generate(LeaveService $leave): void
+         $this->allow('leave.manage');
+         $this->validate(['year' => 'required|integer|min:2000|max:2100']);
+ 
+-        $created = $leave->generateBalances($this->year);
+-        session()->flash('status', "Created {$created} balance rows for {$this->year}. Existing balances were left untouched.");
++        $created = $leave->generateBalances($this->selectedYear());
++        session()->flash('status', "Created {$created} balance rows for {$this->selectedYear()}. Existing balances were left untouched.");
++    }
++
++    private function selectedYear(): int
++    {
++        return $this->year ?: (int) today()->year;
+     }
+ 
+     public function render(LeaveService $leave)
+     {
++        $year = $this->selectedYear();
+         $types = LeaveType::active()->whereNotNull('annual_days')->orderBy('name')->get();
+ 
+         $employees = Employee::visibleTo(auth()->user())->working()->search($this->search)->orderBy('employee_no')->paginate(20);
+ 
+-        $balances = LeaveBalance::whereIn('employee_id', $employees->pluck('id'))->where('year', $this->year)->get()
++        $balances = LeaveBalance::whereIn('employee_id', $employees->pluck('id'))->where('year', $year)->get()
+             ->groupBy('employee_id');
+ 
+-        $grid = $employees->mapWithKeys(fn ($e) => [$e->id => $types->mapWithKeys(function ($t) use ($e, $balances, $leave) {
++        $grid = $employees->mapWithKeys(fn ($e) => [$e->id => $types->mapWithKeys(function ($t) use ($e, $balances, $leave, $year) {
+             $b = $balances->get($e->id)?->firstWhere('leave_type_id', $t->id);
+ 
+             return [$t->id => $b ? [
+                 'allowed' => (float) $b->entitled + (float) $b->carried_forward,
+-                'used' => $leave->used($e, $t, $this->year),
+-                'pending' => $leave->used($e, $t, $this->year, true) - $leave->used($e, $t, $this->year),
++                'used' => $leave->used($e, $t, $year),
++                'pending' => $leave->used($e, $t, $year, true) - $leave->used($e, $t, $year),
+             ] : null];
+         })]);
+ 
+diff --git a/app/Models/Employee.php b/app/Models/Employee.php
+index f1ef925..38628fc 100644
+--- a/app/Models/Employee.php
++++ b/app/Models/Employee.php
+@@ -161,6 +161,7 @@ public function getActivitylogOptions(): LogOptions
+     {
+         // Bank account number and TIN are deliberately not logged.
+         return LogOptions::defaults()
++            ->logAll()
+             ->logExcept(['bank_account_number', 'tax_tin', 'updated_at'])
+             ->logOnlyDirty()
+             ->dontLogEmptyChanges();
+diff --git a/app/Reports/Concerns/UsesPayrollRuns.php b/app/Reports/Concerns/UsesPayrollRuns.php
+index 3e03353..93ba123 100644
+--- a/app/Reports/Concerns/UsesPayrollRuns.php
++++ b/app/Reports/Concerns/UsesPayrollRuns.php
+@@ -12,15 +12,15 @@ protected function runFilter(array $statuses): array
+         $runs = PayrollRun::whereIn('status', $statuses)->orderByDesc('period')->get();
+ 
+         return [
+-            'name' => 'run', 'label' => 'Payroll month', 'type' => 'select', 'required' => true,
++            'name' => 'run', 'label' => 'Payroll month', 'type' => 'select', 'required' => $runs->isNotEmpty(),
+             'options' => $runs->mapWithKeys(fn ($r) => [$r->id => $r->label().' ('.$r->status.')'])->all(),
+-            'default' => (string) $runs->first()?->id,
++            'default' => $runs->first() ? (string) $runs->first()->id : null,
+         ];
+     }
+ 
+     /** @param list<string> $statuses */
+     protected function findRun(array $filters, array $statuses): ?PayrollRun
+     {
+-        return isset($filters['run']) ? PayrollRun::whereIn('status', $statuses)->find($filters['run']) : null;
++        return ! empty($filters['run']) ? PayrollRun::whereIn('status', $statuses)->find($filters['run']) : null;
+     }
+ }
+diff --git a/resources/views/layouts/app.blade.php b/resources/views/layouts/app.blade.php
+index 13df1e6..eed7c78 100644
+--- a/resources/views/layouts/app.blade.php
++++ b/resources/views/layouts/app.blade.php
+@@ -24,14 +24,14 @@
+             <flux:navlist variant="outline">
+                 <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+ 
+-                @can('portal.use')
++                @if (auth()->user()->can('portal.use') && auth()->user()->employee)
+                     <flux:navlist.group :heading="__('My portal')" expandable :expanded="request()->routeIs('portal.*') && ! request()->routeIs('portal.notices', 'portal.documents')">
+                         <flux:navlist.item :href="route('portal.profile')" :current="request()->routeIs('portal.profile')" wire:navigate>{{ __('My profile') }}</flux:navlist.item>
+                         <flux:navlist.item :href="route('portal.payslips')" :current="request()->routeIs('portal.payslips')" wire:navigate>{{ __('My payslips') }}</flux:navlist.item>
+                         <flux:navlist.item :href="route('portal.attendance')" :current="request()->routeIs('portal.attendance')" wire:navigate>{{ __('My attendance') }}</flux:navlist.item>
+                         <flux:navlist.item :href="route('portal.leave')" :current="request()->routeIs('portal.leave')" wire:navigate>{{ __('My leave') }}</flux:navlist.item>
+                     </flux:navlist.group>
+-                @endcan
++                @endif
+                 @can('notices.view')
+                     <flux:navlist.item icon="megaphone" :href="route('portal.notices')" :current="request()->routeIs('portal.notices')" wire:navigate>{{ __('Notices') }}</flux:navlist.item>
+                 @endcan

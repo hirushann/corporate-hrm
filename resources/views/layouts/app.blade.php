@@ -24,14 +24,14 @@
             <flux:navlist variant="outline">
                 <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
 
-                @can('portal.use')
+                @if (auth()->user()->can('portal.use') && auth()->user()->employee)
                     <flux:navlist.group :heading="__('My portal')" expandable :expanded="request()->routeIs('portal.*') && ! request()->routeIs('portal.notices', 'portal.documents')">
                         <flux:navlist.item :href="route('portal.profile')" :current="request()->routeIs('portal.profile')" wire:navigate>{{ __('My profile') }}</flux:navlist.item>
                         <flux:navlist.item :href="route('portal.payslips')" :current="request()->routeIs('portal.payslips')" wire:navigate>{{ __('My payslips') }}</flux:navlist.item>
                         <flux:navlist.item :href="route('portal.attendance')" :current="request()->routeIs('portal.attendance')" wire:navigate>{{ __('My attendance') }}</flux:navlist.item>
                         <flux:navlist.item :href="route('portal.leave')" :current="request()->routeIs('portal.leave')" wire:navigate>{{ __('My leave') }}</flux:navlist.item>
                     </flux:navlist.group>
-                @endcan
+                @endif
                 @can('notices.view')
                     <flux:navlist.item icon="megaphone" :href="route('portal.notices')" :current="request()->routeIs('portal.notices')" wire:navigate>{{ __('Notices') }}</flux:navlist.item>
                 @endcan

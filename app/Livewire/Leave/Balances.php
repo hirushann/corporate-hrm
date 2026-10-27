@@ -18,7 +18,7 @@ class Balances extends Component
 {
     use AuthorizesPermission, WithPagination;
 
-    public int $year;
+    public ?int $year = null;
 
     public string $search = '';
 
@@ -38,26 +38,32 @@ class Balances extends Component
         $this->allow('leave.manage');
         $this->validate(['year' => 'required|integer|min:2000|max:2100']);
 
-        $created = $leave->generateBalances($this->year);
-        session()->flash('status', "Created {$created} balance rows for {$this->year}. Existing balances were left untouched.");
+        $created = $leave->generateBalances($this->selectedYear());
+        session()->flash('status', "Created {$created} balance rows for {$this->selectedYear()}. Existing balances were left untouched.");
+    }
+
+    private function selectedYear(): int
+    {
+        return $this->year ?: (int) today()->year;
     }
 
     public function render(LeaveService $leave)
     {
+        $year = $this->selectedYear();
         $types = LeaveType::active()->whereNotNull('annual_days')->orderBy('name')->get();
 
         $employees = Employee::visibleTo(auth()->user())->working()->search($this->search)->orderBy('employee_no')->paginate(20);
 
-        $balances = LeaveBalance::whereIn('employee_id', $employees->pluck('id'))->where('year', $this->year)->get()
+        $balances = LeaveBalance::whereIn('employee_id', $employees->pluck('id'))->where('year', $year)->get()
             ->groupBy('employee_id');
 
-        $grid = $employees->mapWithKeys(fn ($e) => [$e->id => $types->mapWithKeys(function ($t) use ($e, $balances, $leave) {
+        $grid = $employees->mapWithKeys(fn ($e) => [$e->id => $types->mapWithKeys(function ($t) use ($e, $balances, $leave, $year) {
             $b = $balances->get($e->id)?->firstWhere('leave_type_id', $t->id);
 
             return [$t->id => $b ? [
                 'allowed' => (float) $b->entitled + (float) $b->carried_forward,
-                'used' => $leave->used($e, $t, $this->year),
-                'pending' => $leave->used($e, $t, $this->year, true) - $leave->used($e, $t, $this->year),
+                'used' => $leave->used($e, $t, $year),
+                'pending' => $leave->used($e, $t, $year, true) - $leave->used($e, $t, $year),
             ] : null];
         })]);
 
