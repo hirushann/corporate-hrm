@@ -9,16 +9,17 @@
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+        <link rel="icon" type="image/png" href="{{ asset('images/logo-mark.png') }}">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @fluxAppearance
     </head>
     <body class="min-h-screen bg-zinc-50 font-sans antialiased">
         <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-white">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" wire:navigate class="me-5 flex items-center gap-2 px-2 py-1">
-                <span class="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">HR</span>
-                <span class="text-sm font-semibold text-zinc-900">{{ config('app.name') }}</span>
+            <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center px-1 py-1">
+                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" class="w-full max-w-[200px] h-auto object-contain" />
             </a>
 
             <flux:navlist variant="outline">
@@ -117,7 +118,9 @@
         <flux:header class="border-b border-zinc-200 bg-white lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
             <flux:spacer />
-            <span class="text-sm font-semibold text-zinc-900">{{ config('app.name') }}</span>
+            <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center">
+                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" class="h-7 w-auto object-contain" />
+            </a>
             <flux:spacer />
         </flux:header>
 

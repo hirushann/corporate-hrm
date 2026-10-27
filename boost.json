@@ -1,6 +1,7 @@
 {
     "agents": [
-        "claude_code"
+        "claude_code",
+        "antigravity"
     ],
     "cloud": true,
     "guidelines": true,
@@ -12,6 +13,7 @@
         "deploying-to-cloud",
         "laravel-best-practices",
         "testing-best-practices",
+        "fluxui-development",
         "livewire-development",
         "volt-development",
         "tailwindcss-development"
